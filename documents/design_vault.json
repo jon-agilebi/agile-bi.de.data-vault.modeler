@@ -1,0 +1,8 @@
+{
+   "language": "javascript",
+   "views": {
+       "by_name": {
+           "map": "function(doc){if('properties' in doc) {emit(doc._id, {'name': doc.properties.name, 'id':doc._id, 'description':doc.properties.description, 'user':doc.user, group:doc.properties.group});}}"
+       }
+   }
+}

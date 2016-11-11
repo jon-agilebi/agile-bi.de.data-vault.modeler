@@ -1,0 +1,682 @@
+<script type="text/javascript">
+	
+	$(document).ready(function(){
+    	
+    	{{#if p.usage}}$('input[value={{p.usage}}]').attr('checked', 'checked');{{/if}}
+    	{{#if p.group}}$('#groupDisplay').text('{{p.group}}');{{/if}}
+    	{{#if p.lastSeenOption}}$('input[value={{p.lastSeenOption}}]').attr('checked', 'checked');{{/if}}
+    	{{#if p.hashFunction}}$('input[value={{p.hashFunction}}]').attr('checked', 'checked');{{/if}}
+    	{{#if p.hashKeyDataType}}$('#hashDataTypeDisplay').text('{{p.hashKeyDataType}}');{{/if}}
+    	{{#if p.loadDateDataType}}$('#loadDateDataTypeDisplay').text('{{p.loadDateDataType}}');{{/if}}
+    	{{#if p.recordSourceDataType}}$('#recordSourceDataTypeDisplay').text('{{p.recordSourceDataType}}');{{/if}}
+    	{{#if p.lastSeenDataType}}$('#lastSeenDataTypeDisplay').text('{{p.lastSeenDataType}}');{{/if}}
+    	{{#if p.hana.xs}}$('input[value={{p.hana.xs}}]').attr('checked', 'checked');{{/if}}
+    	{{#if p.hana.dataTypes}}
+    		$('input[name=allowDataType]').filter(function(){
+    															var text = $(this).parent().parent().children('.dataTypeName').text();
+    															var types = "{{p.hana.dataTypes}}";
+    															return types.indexOf(text) != -1;
+    														}).attr('checked', 'checked');
+    	{{/if}}
+    	
+    	{{#if p.oracle.version}}$('input[value={{p.oracle.version}}]').attr('checked', 'checked');{{/if}}
+    	{{#if p.oracle.dataTypes}}
+    		$('input[name=allowDataType]').filter(function(){
+    															var text = $(this).parent().parent().children('.dataTypeName').text();
+    															var types = "{{p.oracle.dataTypes}}";
+    															return types.indexOf(text) != -1;
+    														}).attr('checked', 'checked');
+    	{{/if}}
+    	{{#if p.sql.dataTypes}}
+    		$('input[name=allowDataType]').filter(function(){
+    															var text = $(this).parent().parent().children('.dataTypeName').text();
+    															var types = "{{p.sql.dataTypes}}";
+    															return types.indexOf(text) != -1;
+    														}).attr('checked', 'checked');
+    	{{/if}}
+    	{{#if p.sqlServer.dataTypes}}
+    		$('input[name=allowDataType]').filter(function(){
+    															var text = $(this).parent().parent().children('.dataTypeName').text();
+    															var types = "{{p.sqlServer.dataTypes}}";
+    															return types.indexOf(text) != -1;
+    														}).attr('checked', 'checked');
+    	{{/if}}
+    	
+    	{{#if p.targetSystem}}
+    	    var systemId = '{{p.targetSystem}}';
+    		var systemName;
+    		{{#each c.targetSystems}}if(systemId =='{{id}}') systemName = '{{name}}';{{/each}}
+    		$('#targetSystemDisplay').text(systemName);
+            $('#targetSystemDisplay').attr('system', '{{p.targetSystem}}');
+            $('.dataTypeOption').hide();
+            $('.dataTypeOption').filter(function(index){
+            	return $(this).attr('system') == '{{p.targetSystem}}';
+            }).show();
+    	{{/if}}
+    	
+    	{{#if p.hashKeyDataTypePrecision}}$('#hashDataTypePrecision').removeClass('hidden');{{/if}}
+    	{{#if p.hashKeyDataTypeScale}}$('#hashDataTypeScale').removeClass('hidden');{{/if}}
+    	{{#if p.loadDateDataTypePrecision}}$('#loadDateDataTypePrecision').removeClass('hidden');{{/if}}
+    	{{#if p.loadDateDataTypeScale}}$('#loadDateDataTypeScale').removeClass('hidden');{{/if}}
+    	{{#if p.recordSourceDataTypePrecision}}$('#recordSourceDataTypePrecision').removeClass('hidden');{{/if}}
+    	{{#if p.recordSourceDataTypeScale}}$('#recordSourceDataTypeScale').removeClass('hidden');{{/if}}
+    	{{#if p.lastSeenDataTypePrecision}}$('#lastSeenDataTypePrecision').removeClass('hidden');{{/if}}
+    	{{#if p.lastSeenDataTypeScale}}$('#lastSeenDataTypeScale').removeClass('hidden');{{/if}}
+    		
+		$('#cancelProperties').click(function(event){
+    		window.location.href = "/";
+    	});
+    	
+	    $('#deleteModel').click(function(event){
+	   		var path = "/remove";
+	    	{{#if modelId}}path = path + '/{{modelId}}';{{/if}}
+	    	var deleteIt = confirm("Do you really want to delete this model? This action is irrevocable!");
+	    	if(deleteIt) $.get(path);
+	    		
+	    	window.location.href = "/";
+	    });
+    		
+	    $('#saveProperties').click(function(event){
+	    	var path = "/properties";
+	    	{{#if modelId}}path = path + '/{{modelId}}';{{/if}}
+	    			
+	    	$.ajaxSetup({
+				contentType: "application/json; charset=utf-8"
+			});
+			
+			var dataTypes = [];
+			$('input[name=allowDataType]:checked').parent().parent().children('.dataTypeName').each(function(index){dataTypes.push($(this).text());});
+			console.log(dataTypes);
+	    	$.post(path, JSON.stringify({"name":$('#modelNameInput').val(),
+	    		"description":$('#modelDescriptionInput').val(),
+	    		"group": $('#groupDisplay').text(),
+	    		"hubName": $('#hubNameInput').val(),
+	    		"linkName": $('#linkNameInput').val(),
+	    		"satelliteName": $('#satelliteNameInput').val(),
+	    		"usage": $('input[name=optionUsage]:checked').val(),
+	    		"loadDateName": $('#loadDateNameInput').val(),
+	    		"recordSourceName": $('#recordSourceNameInput').val(),
+	    		"targetSystem":$('#targetSystemDisplay').attr('system'),
+	    		"lastSeenName": $('#lastSeenNameInput').val(),
+	    		"lastSeenOption": $('input[name=optionLastSeen]:checked').val(),
+	    		"hubHashKey":$('#hubHashKeyInput').val(),
+    		    "linkHashKey":$('#linkHashKeyInput').val(),
+    		    "hashFunction":$('input[name=optionHash]:checked').val(),
+    		    "hashKeyDataType":$('#hashDataTypeDisplay').text(),
+    		    "hashKeyDataTypePrecision":$('#hashDataTypePrecision').val(),
+    		    "hashKeyDataTypeScale":$('#hashDataTypeScale').val(),
+    		    "loadDateDataTypePrecision":$('#loadDateDataTypePrecision').val(),
+    		    "loadDateDataTypeScale":$('#loadDateDataTypeScale').val(),
+    		    "recordSourceDataTypePrecision":$('#recordSourceDataTypePrecision').val(),
+    		    "recordSourceDataTypeScale":$('#recordSourceDataTypeScale').val(),
+    		    "lastSeenDataTypePrecision":$('#lastSeenDataTypePrecision').val(),
+    		    "lastSeenDataTypeScale":$('#lastSeenDataTypeScale').val(),
+    		    "businessKeyTemplate":$('#businessHashKeyTemplateInput').val(),
+    		    "linkKeyTemplate":$('#linkHashKeyTemplateInput').val(),
+    		    "hashDiffTemplate":$('#hashDiffTemplateInput').val(),
+    		    "loadDateDataType":$('#loadDateDataTypeDisplay').text(),
+    		    "recordSourceDataType":$('#recordSourceDataTypeDisplay').text(),
+    		    "lastSeenDataType":$('#lastSeenDataTypeDisplay').text(),
+    		    "hana": {"namespace": $('#hanaNamespace').val(), "schema": $('#hanaSchema').val(), "context": $('#hanaContext').val(),
+    		             "xs": $('input[name=optionHanaXS]:checked').val(), "dataTypes":dataTypes},
+    		    "oracle": {"schema": $('#oracleSchema').val(), "tablespace": $('#oracleTablespace').val(), "encoding": $('#oracleEncoding').val(), 
+    		               "version": $('input[name=optionOracleVersion]:checked').val(), "tableProperties": $('#oracleTableProperties').val(), "dataTypes":dataTypes},
+    		    "sqlServer": {"database": $('#sqlServerDatabase').val(), "dataset": $('#sqlServerDataset').val(), "dataTypes":dataTypes},
+    		    "sql": {"schema": $('#ansiSchema').val(), "dataTypes":dataTypes}
+    		               
+    		})).done(function(){
+    			window.location.href = "/";
+    		}).fail(function(){
+    			alert("Something went wrong");
+    		});	
+    	});
+    	
+    	$(".groupOption").click(function(ev) {
+            $('#groupDisplay').text($(this).text());
+        });	
+    		
+    	$(".targetSystemOption").click(function(ev) {
+    		var aSystem = $(this).attr('system');
+            $('#targetSystemDisplay').text($(this).text());
+            $('#targetSystemDisplay').attr('system', $(this).attr('system'));
+            $('.dataTypeOption').hide();
+            $('.dataTypeOption').filter(function(index){
+            	return $(this).attr('system') == aSystem;
+            }).show();
+        });	
+        
+        $(".hashDataTypeOption").click(function(ev) {
+        	$('#hashDataTypeDisplay').text($(this).text());
+        	if($(this).text().indexOf("(p,s)") != -1) {
+        		$('#hashDataTypePrecision').removeClass('hidden');
+        		$('#hashDataTypePrecision').attr('placeholder', 'p');
+        		$('#hashDataTypeScale').removeClass('hidden');
+        	}
+        	else if($(this).text().indexOf("(n)") != -1) {
+        		$('#hashDataTypePrecision').removeClass('hidden');
+        		$('#hashDataTypeScale').addClass('hidden');
+        		$('#hashDataTypePrecision').attr('placeholder', 'n');
+        	}
+        	else {
+        		$('#hashDataTypePrecision').addClass('hidden');
+        		$('#hashDataTypeScale').addClass('hidden');
+        	}
+        });
+        
+        $(".loadDateDataTypeOption").click(function(ev) {
+        	$('#loadDateDataTypeDisplay').text($(this).text());
+        	if($(this).text().indexOf("(p,s)") != -1) {
+        		$('#loadDateDataTypePrecision').removeClass('hidden');
+        		$('#loadDateDataTypePrecision').attr('placeholder', 'p');
+        		$('#loadDateDataTypeScale').removeClass('hidden');
+        	}
+        	else if($(this).text().indexOf("(n)") != -1) {
+        		$('#loadDateDataTypePrecision').removeClass('hidden');
+        		$('#loadDateDataTypeScale').addClass('hidden');
+        		$('#loadDateDataTypePrecision').attr('placeholder', 'n');
+        	}
+        	else {
+        		$('#loadDateDataTypePrecision').addClass('hidden');
+        		$('#loadDateDataTypeScale').addClass('hidden');
+        	}
+        });	
+        
+        $(".recordSourceDataTypeOption").click(function(ev) {
+        	$('#recordSourceDataTypeDisplay').text($(this).text());
+        	if($(this).text().indexOf("(p,s)") != -1) {
+        		$('#recordSourceDataTypePrecision').removeClass('hidden');
+        		$('#recordSourceDataTypePrecision').attr('placeholder', 'p');
+        		$('#recordSourceDataTypeScale').removeClass('hidden');
+        	}
+        	else if($(this).text().indexOf("(n)") != -1) {
+        		$('#recordSourceDataTypePrecision').removeClass('hidden');
+        		$('#recordSourceDataTypeScale').addClass('hidden');
+        		$('#recordSourceDataTypePrecision').attr('placeholder', 'n');
+        	}
+        	else {
+        		$('#recordSourceDataTypePrecision').addClass('hidden');
+        		$('#recordSourceDataTypeScale').addClass('hidden');
+        	}
+        });		
+        
+        $(".lastSeenDataTypeOption").click(function(ev) {
+        	$('#lastSeenDataTypeDisplay').text($(this).text());
+        	if($(this).text().indexOf("(p,s)") != -1) {
+        		$('#lastSeenDataTypePrecision').removeClass('hidden');
+        		$('#lastSeenDataTypePrecision').attr('placeholder', 'p');
+        		$('#lastSeenDataTypeScale').removeClass('hidden');
+        	}
+        	else if($(this).text().indexOf("(n)") != -1) {
+        		$('#lastSeenDataTypePrecision').removeClass('hidden');
+        		$('#lastSeenDataTypeScale').addClass('hidden');
+        		$('#lastSeenDataTypePrecision').attr('placeholder', 'n');
+        	}
+        	else {
+        		$('#lastSeenDataTypePrecision').addClass('hidden');
+        		$('#lastSeenDataTypeScale').addClass('hidden');
+        	}
+        });
+        
+        $("#targetSystemDisplay").click(function(ev) {
+        	if($(this).text() == "SAP Hana") $('#hanaModal').modal('show');
+        	else if($(this).text() == "Oracle") $('#oracleModal').modal('show');
+        	else if($(this).text() == "SQL Server") $('#sqlServerModal').modal('show');
+        	else $('#standardModal').modal('show');
+        });
+        
+        $(".functionEditor").focusout(function(){
+        
+ 			$.ajaxSetup({
+				contentType: "application/json; charset=utf-8"
+			});
+			       
+        	var term = $(this).val();
+        	var context = $(this);
+        	
+        	$.post("/check", JSON.stringify({term:term})).done(function(data){
+        	 if(data.status == "ok") context.attr("style", "background-color:white");
+        	 else context.attr("style", "background-color:orangered");
+        	}) ;
+        });
+        
+    });
+</script>
+<div class="row row-offcanvas row-offcanvas-right"> 
+	<div class="col-xs-6 col-sm-6 col-lg-6">
+		<div class="row">
+			<div class="panel panel-default">
+		    	<div class="panel-heading">
+		        	<div class="panel-title">Model</div>
+		        </div> 
+		        <div class="panel-body">
+		        	<form>
+						<div class="form-group">
+						    <label for="modelNameInput">Model Name</label>
+						    <input type="input" class="form-control" id="modelNameInput" placeholder="Model Name" {{#if p.name}}value={{p.name}}{{/if}} />
+						</div>
+						<div class="form-group">
+						    <label for="modelDescriptionInput">Description</label>
+						    <textarea class="form-control" id="modelDescriptionInput" placeholder="Description"  rows="4">{{#if p.description}}{{p.description}}{{/if}}</textarea>
+						</div>
+						<div class="dropdown">
+							<button class="btn btn-default dropdown-toggle" type="button" id="dropdownGroup" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								<span id="groupDisplay">Choose a group</span>
+								<span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu" aria-labelledby="dropdownGroup" id="groupSelection">
+								{{#each groups}}<li><a href="#" class="groupOption">{{name}}</a></li>{{/each}}
+							</ul>
+						</div>
+						<div class="radio">
+							<label>
+						  		<input type="radio" name="optionUsage" value="raw" id="optionUsageRaw" /> Raw Vault
+						  	</label>
+						</div>
+						<div class="radio">
+						  	<label>
+						  		<input type="radio" name="optionUsage" value="both" id="optionUsageBoth" /> Raw Vault & Business Vault
+						  	</label>
+						</div>
+						<div class="radio">
+						  	<label>
+						  		<input type="radio" name="optionUsage" value="business" id="optionUsageBusiness" /> Business Vault
+						  	</label>
+						</div>
+						<div class="dropdown">
+							<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								Target System
+							    <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu" aria-labelledby="dropdownMenu1" id="targetSystemSelection">
+								{{#each c.targetSystems}}<li><a href="#" system={{id}} class="targetSystemOption">{{name}}</a></li>{{/each}}
+							</ul>
+							<a id="targetSystemDisplay">Choose a Target System</a>
+						</div> 
+						<div class="btn-group pull-right" role="group" aria-label="...">
+							  <button type="button" class="btn btn-danger" id="deleteModel">Delete Model</button>
+						</div>
+					</form>
+		        </div>
+		    </div> 
+		 </div>
+		 <div class="row">
+		 	<div class="panel panel-default">
+				<div class="panel-heading">
+			   		<div class="panel-title">Hash Functions</div>
+			    </div>
+			    <div class="panel-body">
+			    	<form>
+			        	<div class="radio">
+							<label>
+								<input type="radio" name="optionHash" value="md5" id="optionHashMd5" /> md5
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+								 <input type="radio" name="optionHash" value="sha1" id="optionHashSha1" /> sha1
+							</label>
+						</div>
+						<div class="form-group">
+							<label for="dropdownHashDataType">Hash Value Data Type</label>
+							<div class="row">
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<div class="dropdown">
+										<button class="btn btn-default dropdown-toggle" type="button" id="dropdownHashDataType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+										    <span id="hashDataTypeDisplay">Choose a Data Type</span>
+										    <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="dropdownHashDataType" id="hashDataTypeSelection">
+											{{#each dts}}<li class="dataTypeOption hashDataTypeOption" system={{system}}>{{dataType}}</li>{{/each}}
+										</ul>
+									</div>
+								</div>
+								<div class="col-xs-2 col-sm-2 col-lg-2">
+									<input type="input" class="form-control hidden" id="hashDataTypePrecision" placeholder="p" {{#if p.hashKeyDataTypePrecision}}value={{p.hashKeyDataTypePrecision}}{{/if}} /> 
+								</div>
+								<div class="col-xs-2 col-sm-2 col-lg-2">
+									<input type="input" class="form-control hidden" id="hashDataTypeScale" placeholder="s" {{#if p.hashKeyDataTypeScale}}value={{p.hashKeyDataTypeScale}}{{/if}} /> 
+								</div>
+								<div class="col-xs-5 col-sm-5 col-lg-5"> 
+								</div>
+							</div>
+						</div>  
+						<div class="form-group">
+							<label for="businessHashKeyTemplateInput">Business Hash Key Template</label>
+							<textarea class="form-control functionEditor" id="businessHashKeyTemplateInput" placeholder="" rows="4">{{#if p.businessKeyTemplate}}{{p.businessKeyTemplate}}{{else}}{{c.businessKeyTemplate}}{{/if}}</textarea>
+						</div>
+						<div class="form-group">
+							<label for="linkHashKeyTemplateInput">Link Key Hash Template</label>
+							<textarea class="form-control functionEditor" id="linkHashKeyTemplateInput" placeholder="" rows="4">{{#if p.linkKeyTemplate}}{{p.linkKeyTemplate}}{{else}}{{c.linkKeyTemplate}}{{/if}}</textarea>
+						</div>
+						<div class="form-group">
+							<label for="hashDiffTemplateInput">Hash Diff Template</label>
+							<textarea class="form-control functionEditor" id="hashDiffTemplateInput" placeholder="Description"  rows="4">{{#if p.hashDiffTemplate}}{{p.hashDiffTemplate}}{{else}}{{c.hashDiffTemplate}}{{/if}}</textarea>
+						</div>
+					</form>
+				</div>
+			  </div>
+		    </div>
+		</div>	
+		<div class="col-xs-5 col-sm-5 col-lg-5 col-lg-offset-1"> 
+			<div class="row"> 
+		    	<div class="panel panel-default">  
+		        	<div class="panel-heading"><div class="panel-title">Syntax</div>
+		        	</div>  
+		        	<div class="panel-body"> 
+		        		<div class="form-group">
+						    <label for="hubNameInput">Hub Name Naming Convention</label>
+						    <input type="input" class="form-control" id="hubNameInput" placeholder="Hub Name Pattern" {{#if p.hubName}}value={{p.hubName}}{{else}}value={{c.namingConventions.hubName}}{{/if}} />
+						</div> 
+						<div class="form-group">
+						    <label for="linkNameInput">Link Name Naming Convention</label>
+						    <input type="input" class="form-control" id="linkNameInput" placeholder="Link Name Pattern" {{#if p.linkName}}value={{p.linkName}}{{else}}value={{c.namingConventions.linkName}}{{/if}}>
+						</div> 
+						<div class="form-group">
+						    <label for="satelliteNameInput">Satellite Name Naming Convention</label>
+						    <input type="input" class="form-control" id="satelliteNameInput" placeholder="Satellite Name Pattern" {{#if p.satelliteName}}value={{p.satelliteName}}{{else}}value={{c.namingConventions.satelliteName}}{{/if}}>
+						</div> 
+						<div class="form-group">
+						    <label for="hubHashKeyInput">Hub Hashkey Naming Convention</label>
+						    <input type="input" class="form-control" id="hubHashKeyInput" placeholder="Hub Hashkey Naming Convention" {{#if p.hubHashKey}}value={{p.hubHashKey}}{{else}}value={{c.namingConventions.hubHashKey}}{{/if}}>
+						</div>
+						<div class="form-group">
+						    <label for="linkHashKeyInput">Link Hashkey Naming Convention</label>
+						    <input type="input" class="form-control" id="linkHashKeyInput" placeholder="Link Hashkey Naming Convention" {{#if p.linkHashKey}}value={{p.linkHashKey}}{{else}}value={{c.namingConventions.linkHashKey}}{{/if}}>
+						</div>
+						<div class="form-group">
+						    <label for="loadDateNameInput">Load Date Name</label>
+						    <input type="input" class="form-control" id="loadDateNameInput" placeholder="Load Date Name" {{#if p.loadDateName}}value={{p.loadDateName}}{{else}}value={{c.namingConventions.loadDate}}{{/if}}>
+						</div>
+						<div class="form-group">
+							<label for="dropdownLoadDateDataType">Load Date Data Type</label>
+							<div class="row">
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<div class="dropdown">
+										<button class="btn btn-default dropdown-toggle" type="button" id="dropdownLoadDateDataType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+										    <span id="loadDateDataTypeDisplay">Choose a Data Type</span>
+										    <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="dropdownLoadDateDataType" id="loadDateDataTypeSelection">
+										  	{{#each dts}}<li class="dataTypeOption loadDateDataTypeOption" system={{system}}>{{dataType}}</li>{{/each}}
+										</ul>
+									</div>
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="loadDateDataTypePrecision" placeholder="p" {{#if p.loadDateDataTypePrecision}}value={{p.loadDateDataTypePrecision}}{{/if}} /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="loadDateDataTypeScale" placeholder="s" {{#if p.loadDateDataTypeScale}}value={{p.loadDateDataTypeScale}}{{/if}} /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3"> 
+								</div>
+							</div> 
+						</div>  
+						<div class="form-group">
+						    <label for="recordSourceNameInput">Record Source Name</label>
+						    <input type="input" class="form-control" id="recordSourceNameInput" placeholder="Record Source Name" {{#if p.recordSourceName}}value={{p.recordSourceName}}{{else}}value={{c.namingConventions.recordSource}}{{/if}}>
+						</div>
+						<div class="form-group">
+							<label for="dropdownRecordSourceDataType">Record Source Data Type</label>
+							<div class="row">
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<div class="dropdown">
+										<button class="btn btn-default dropdown-toggle" type="button" id="dropdownRecordSourceDataType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+										    <span id="recordSourceDataTypeDisplay">Choose a Data Type</span>
+										    <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="dropdownRecordSourceDataType" id="hashDataTypeSelection">
+										  	{{#each dts}}<li class="dataTypeOption recordSourceDataTypeOption" system={{system}}>{{dataType}}</li>{{/each}}
+										</ul>
+									</div>
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="recordSourceDataTypePrecision" placeholder="p" {{#if p.recordSourceDataTypePrecision}}value={{p.recordSourceDataTypePrecision}}{{/if}}  /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="recordSourceDataTypeScale" placeholder="s"  {{#if p.recordSourceDataTypeScale}}value={{p.recordSourceDataTypeScale}}{{/if}} /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3"> 
+								</div> 
+							</div>
+						</div>  
+						<div class="form-group">
+						    <label for="lastSeenOption">Add a last seen field</label>
+						</div>
+						<div class="radio">
+							<label>
+						  		<input type="radio" name="optionLastSeen" value="never" id="optionLastSeenNever" /> never
+						  	</label>
+						</div>
+						<div class="radio">
+						  	<label>
+						  		<input type="radio" name="optionLastSeen" value="always" id="optionLastSeenAlways" /> always
+						  	</label>
+						</div>
+						<div class="radio">
+						  	<label>
+						  		<input type="radio" name="optionLastSeen" value="depends" id="optionLastSeenDepends" /> decide for each element
+						  	</label>
+						</div>
+						<div class="form-group">
+						    <label for="lastSeenNameInput">Last Seen Name</label>
+						    <input type="input" class="form-control" id="lastSeenNameInput" placeholder="Last Seen Name" {{#if p.lastSeenName}}value={{p.lastSeenName}}{{else}}value={{c.namingConventions.lastSeen}}{{/if}}>
+						</div>
+						<div class="form-group">
+							<label for="dropdownLastSeenDataType">Last Seen Data Type</label>
+							<div class="row">
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<div class="dropdown">
+										<button class="btn btn-default dropdown-toggle" type="button" id="dropdownLastSeenDataType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+										    <span id="lastSeenDataTypeDisplay">Choose a Data Type</span>
+										    <span class="caret"></span>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="dropdownLastSeenDataType" id="lastSeenDataTypeSelection">
+										  	{{#each dts}}<li class="dataTypeOption lastSeenDataTypeOption" system={{system}}>{{dataType}}</li>{{/each}}
+										</ul>
+									</div>
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="lastSeenDataTypePrecision" placeholder="p" {{#if p.lastSeenDataTypePrecision}}value={{p.lastSeenDataTypePrecision}}{{/if}} /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3">
+									<input type="input" class="form-control hidden" id="lastSeenDataTypeScale" placeholder="s" {{#if p.lastSeenDataTypeScale}}value={{p.lastSeenDataTypeScale}}{{/if}} /> 
+								</div>
+								<div class="col-xs-3 col-sm-3 col-lg-3"> 
+								</div> 
+							</div> 
+						</div>  <!-- form-group -->     
+					</div>  <!-- panel-body -->
+		        </div>  <!-- panel-default -->
+		    </div> <!-- row -->
+		</div>  <!-- col -->
+	</div> <!-- row -->
+	<div class="row row-offcanvas row-offcanvas-right"> 
+		<div class="col-xs-12 col-sm-12">
+			<div class="btn-group pull-right" role="group" aria-label="...">
+				<button type="button" class="btn btn-default" id="saveProperties">Save</button>
+			  	<button type="button" class="btn btn-default" id="cancelProperties">Cancel</button>
+			</div> 
+		</div>
+	</div>
+
+<div class="modal fade" id="hanaModal" tabindex="-1" role="dialog" data-ng-app="vault">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			    <h4 class="modal-title">HANA specific settings</h4>
+			 </div>
+			 <div class="modal-body">
+			 	<form>
+					<div class="form-group">
+					    <label for="hanaNamespace">Namespace</label>
+					    <input type="text" class="form-control" id="hanaNamespace" placeholder="Namespace" {{#if p.hana.namespace}}value={{p.hana.namespace}}{{/if}}>
+					</div>
+					<div class="form-group">
+					    <label for="hanaSchema">Schema</label>
+					    <input type="text" class="form-control" id="hanaSchema" placeholder="Schema" {{#if p.hana.schema}}value={{p.hana.schema}}{{/if}}>
+					</div>
+					<div class="form-group">
+					    <label for="hanaContext">Context</label>
+					    <input type="text" class="form-control" id="hanaContext" placeholder="Context" {{#if p.hana.context}}value={{p.hana.context}}{{/if}}>
+					</div>
+					<div class="radio">
+						<label>
+							<input type="radio" name="optionHanaXS" value="classic" id="optionHanaXSClassic" /> XS classic
+						</label>
+					</div>
+					<div class="radio">
+						<label>
+						  	<input type="radio" name="optionHanaXS" value="advanced" id="optionHanaXSAdvanced" /> XS advanced
+						</label>
+					</div>
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+						  		<td>Data Type</td>
+						  		<td>allowed</td>
+						  	</tr>
+						</thead>
+						<tbody>  
+							{{#each dts}}<tr class="dataTypeOption" system={{system}}><td class="dataTypeName">{{dataType}}</td><td><input name="allowDataType" type="checkbox"/></td></tr>{{/each}}
+						</tbody>
+					</table>
+				</form>
+			 </div>
+			 <div class="modal-footer">
+			 	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="oracleModal" tabindex="-1" role="dialog" data-ng-app="vault">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			    <h4 class="modal-title">Oracle specific settings</h4>
+			 </div>
+			 <div class="modal-body">
+			 	<form>
+					<div class="form-group">
+					    <label for="oracleSchema">Schema</label>
+					    <input type="text" class="form-control" id="oracleSchema" placeholder="Schema" {{#if p.oracle.schema}}value={{p.oracle.schema}}{{/if}}>
+					</div>
+					<div class="form-group">
+					    <label for="oracleTablespace">Tablespace</label>
+					    <input type="text" class="form-control" id="oracleTablespace" placeholder="Tablespace" {{#if p.oracle.tablespace}}value={{p.oracle.tablespace}}{{/if}}>
+					</div>
+					<div class="form-group">
+					    <label for="oracleEncoding">Encoding</label>
+					    <input type="text" class="form-control" id="oracleEncoding" placeholder="Encoding" {{#if p.oracle.encoding}}value={{p.oracle.encoding}}{{else}}{{c.oracleEncoding}}{{/if}}>
+					</div>
+					<div class="form-group">
+						<label>Database Version</label>
+						<div class="radio">
+							<label>
+								<input type="radio" name="optionOracleVersion" value="10g" id="optionOracleVersion10g" /> Oracle 10g
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+							  	<input type="radio" name="optionOracleVersion" value="11g" id="optionOracleVersion11g" /> Oracle 11g
+							</label>
+						</div>
+						<div class="radio">
+							<label>
+							  	<input type="radio" name="optionOracleVersion" value="12c" id="optionOracleVersion12c" /> Oracle 12c
+							</label>
+						</div>
+					</div>
+					
+					<div class="form-group">
+					    <label for="oracleTableProperties">Table Properties</label>
+					    <textarea class="form-control" id="oracleTableProperties" placeholder="Table Properties"  rows="12">{{#if p.oracle.tableProperties}}{{p.oracle.tableProperties}}{{else}}{{c.oracleTableProperties}}{{/if}}</textarea>
+					</div>
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+						  		<td>Data Type</td>
+						  		<td>allowed</td>
+						  	</tr>
+						</thead>
+						<tbody>  
+							{{#each dts}}<tr class="dataTypeOption" system={{system}}><td class="dataTypeName">{{dataType}}</td><td><input name="allowDataType" type="checkbox"/></td></tr>{{/each}}
+						</tbody>
+					</table>
+				</form>
+			 </div>
+			 <div class="modal-footer">
+			 	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="sqlServerModal" tabindex="-1" role="dialog" data-ng-app="vault">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			    <h4 class="modal-title">Oracle specific settings</h4>
+			 </div>
+			 <div class="modal-body">
+			 	<form>
+					<div class="form-group">
+					    <label for="sqlServerDatabase">Database</label>
+					    <input type="text" class="form-control" id="sqlServerDatabase" placeholder="Database" {{#if p.sqlServer.database}}value={{p.sqlServer.database}}{{/if}}>
+					</div>
+					<div class="form-group">
+					    <label for="sqlServerDataset">Dataset</label>
+					    <input type="text" class="form-control" id="sqlServerDataset" placeholder="Dataset" {{#if p.sqlServer.dataset}}value={{p.sqlServer.dataset}}{{/if}}>
+					</div>	
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+						  		<td>Data Type</td>
+						  		<td>allowed</td>
+						  	</tr>
+						</thead>
+						<tbody>  
+							{{#each dts}}<tr class="dataTypeOption" system={{system}}><td class="dataTypeName">{{dataType}}</td><td><input name="allowDataType" type="checkbox"/></td></tr>{{/each}}
+						</tbody>
+					</table>
+				</form>
+			 </div>
+			 <div class="modal-footer">
+			 	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="standardModal" tabindex="-1" role="dialog" data-ng-app="vault">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			    <h4 class="modal-title">Oracle specific settings</h4>
+			 </div>
+			 <div class="modal-body">
+			 	<form>
+					<div class="form-group">
+					    <label for="ansiSchema">Schema</label>
+					    <input type="text" class="form-control" id="ansiSchema" placeholder="Schema" {{#if p.sql.schema}}value={{p.sql.schema}}{{/if}}>
+					</div>
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+						  		<td>Data Type</td>
+						  		<td>allowed</td>
+						  	</tr>
+						</thead>
+						<tbody>  
+							{{#each dts}}<tr class="dataTypeOption" system={{system}}><td class="dataTypeName">{{dataType}}</td><td><input name="allowDataType" type="checkbox"/></td></tr>{{/each}}
+						</tbody>
+					</table>
+				</form>
+			 </div>
+			 <div class="modal-footer">
+			 	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>

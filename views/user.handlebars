@@ -1,0 +1,74 @@
+<div data-ng-app="user">
+	<div data-ng-controller="UserController">
+		<div class="row row-offcanvas row-offcanvas-right">
+			<div class="col-xs-12 col-sm-12">
+		    	<div class="row">
+			    	<div class="col-xs-6 col-sm-6">
+			        	<div class="panel panel-default">
+			        		<div class="panel-heading clearfix"><div class="panel-title">User</div>
+			        		</div>
+			        		<div class="panel-body">
+			        			<div class="list-group">
+			            			<a href="#" class="list-group-item userItem" data-ng-repeat="u in user" data-ng-click="selectUser(u)">({(u.user)})</a>
+			          			</div>
+			        		</div>
+			        	</div>
+			        </div>
+			        <div class="col-xs-6 col-sm-6">
+			        	<div class="panel panel-default">
+			        		<div class="panel-heading clearfix">
+			        		<div class="panel-title">Groups
+				        		<div class="btn-group pull-right"  role="group" aria-label="...">
+									<button type="button" class="btn btn-default" data-toggle="modal" data-target="#groupNameModal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+									<button type="button" class="btn btn-default" data-ng-click="removeGroup()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+									<button type="button" class="btn btn-default" data-ng-click="addToGroup()"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></button>
+									<button type="button" class="btn btn-default" data-ng-click="removeFromGroup()"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></button>				
+								</div>
+							</div>
+			        	</div>
+			        	<div class="panel-body">
+			        		<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+		  						<div class="panel panel-default" data-ng-repeat="g in groups" data-ng-click="selectGroup(g)">
+		    						<div class="panel-heading" role="tab">
+		      							<h4 class="panel-title memberOverview" marker=({(g.name)})>
+		        							<a role="button" data-toggle="collapse" data-parent="#accordion" href=({(g.ref)}) aria-expanded="true" aria-controls=({(g.name)})>({(g.name)})</a>
+		      							</h4>
+		    						</div>
+		    						<div id=({(g.name)}) class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+		      							<div class="panel-body">
+		      								<div class="list-group">
+			    								<a href="#" class="list-group-item memberItem" data-ng-repeat="m in g.member" data-ng-click="selectMember(m)">({(m.user)})<span class="glyphicon ({(m.icon)}) pull-right" aria-hidden="true" role=({(m.role)}) data-ng-click="changeRole()"></a>
+			    							</div>
+		      							</div>
+		    						</div>
+		  						</div>		
+		  					</div>
+			        	</div>
+			        </div>
+				</div>
+			</div>
+		</div>	
+		<div class="modal fade" id="groupNameModal" tabindex="-1" role="dialog">
+			<div class="modal-dialog"">
+				<div class="modal-content">
+			    	<div class="modal-header">
+			        	<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			        	<h4 class="modal-title">Create a new group</h4>
+			      	</div>
+			      	<div class="modal-body">
+			        	<form>
+							<div class="form-group">
+								<label for="groupName">Name</label>
+								<input type="text" class="form-control" data-ng-model="groupName" placeholder="Group Name">
+							</div>
+						</form>
+			      	</div>
+			      	<div class="modal-footer">
+			        	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			        	<button type="button" class="btn btn-default" data-dismiss="modal" data-ng-click="addGroup()">Save</button>
+			      	</div>
+			    </div>
+			</div>
+		</div>
+	</div>
+</div>

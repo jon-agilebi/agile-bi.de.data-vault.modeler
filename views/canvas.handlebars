@@ -1,0 +1,343 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		paper.setup('hubIcon');
+		drawHubIcon(paper, 0, 0, 1);
+	});
+</script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		paper.setup('linkIcon');
+		drawLinkIcon(paper, 0, 0, 1);
+	});
+</script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		paper.setup('satelliteIcon');
+		drawSatelliteIcon(paper, 0, 0, 1);
+	});
+</script> <!--
+<script type="text/javascript">
+	$(document).ready(function(){
+		paper.setup('bridgeIcon');
+		drawBridgeIcon(paper, 0, 0, 1);
+	});
+</script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		paper.setup('referenceIcon');
+		drawReferenceIcon(paper, 0, 0, 1);
+	});
+</script> -->
+<script type="text/javascript">
+	$(document).ready(function(){
+		prepareCanvas(paper);
+		$('#addHub').click(function(){addHub(paper);});
+		$('#addLink').click(function(){addLink(paper);});
+		$('#addSatellite').click(function(){addSatellite(paper);});
+		$('#addBridge').click(function(){addElement(paper, 'bridge');});
+		$('#addReference').click(function(){addElement(paper, 'reference');});
+		$('#saveDetailsButton').click(function(){saveDetails();});
+		$('#deleteElementButton').click(function(){
+			var deleteIt = confirm("Do you really want to remove this element?");
+			if(deleteIt) deleteElement();});
+		$('#deleteConnectionButton').click(function(){
+			var deleteIt = confirm("Do you really want to remove this connection?");
+			if(deleteIt) deleteConnection();});
+		$('.addSomething').prop('disabled', true);
+		$('#saveConnectionNameButton').click(function(){saveConnectionName(paper);});
+		$(".linkTypeOption").click(function(ev) {
+        	$('#linkTypeDisplay').attr('linkType', $(this).text());
+			$('#linkTypeDisplay').text($(this).text());
+        });
+        $(".satelliteTypeOption").click(function(ev) {
+        	$('#satelliteTypeDisplay').attr('satelliteType', $(this).text());
+			$('#satelliteTypeDisplay').text($(this).text());
+        });
+        $('#elementName').focusout(function(){
+        	checkElement(toBeEdited);
+        });
+	});
+</script>
+<div data-ng-app="vault">
+	<div data-ng-controller="VaultController" id="canvasMain">
+		<div class="row row-offcanvas row-offcanvas-right">
+			<div class="col-xs-12 col-sm-12">
+    			<div class="row">
+    				<div class="col-xs-3 col-sm-3 sidebar-offcanvas" id="sidebar">
+    					<div class="panel panel-default">
+							<div class="panel-heading clearfix">
+						    	<div class="panel-title">Views</div>
+						    </div>
+						    <div class="panel-body">
+			          			<div class="list-group">
+			            			<a href="#" data-ng-repeat="v in actualModel.views" data-ng-click="selectView(v)" data-ng-class="{active: v.active}" class="list-group-item viewHeader">({(v.name)})</a>
+			          			</div>
+			          		</div>
+			          	</div>
+	          			<div class="panel panel-default">
+	        				<div class="panel-heading">
+	        					<div class="panel-title">Palette</div>
+	        				</div>
+	        				<div class="panel-body">
+	        					<div class="media">
+									<div class="media-left">
+						    			<canvas id="hubIcon" width="64" height="64">
+										</canvas>        		
+									</div>
+					  				<div class="media-body">
+					    				<h4 class="media-heading">Hub</h4>
+					    				<div class="btn-group" role="group" aria-label="...">
+						  					<button type="button" class="btn btn-default addSomething" id="addHub"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+						  					<button type="button" class="btn btn-default addSomething" id="linkHub" data-toggle="modal" data-target="#linkModal" data-ng-click="prepareReference('hub')"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
+										</div>
+					  				</div>
+								</div>
+								<div class="media">
+									<div class="media-left">
+										<canvas id="linkIcon" width="64" height="64">
+										</canvas>        		
+									</div>
+									<div class="media-body">
+										<h4 class="media-heading">Link</h4>
+										<div class="btn-group" role="group" aria-label="...">
+											<button type="button" class="btn btn-default addSomething" id="addLink"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+											<button type="button" class="btn btn-default addSomething" id="linkLink" data-toggle="modal" data-target="#linkModal" data-ng-click="prepareReference('link')"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
+										</div>
+									</div>
+								</div>
+								<div class="media">
+									<div class="media-left">
+										<canvas id="satelliteIcon" width="64" height="64">
+										</canvas>        		
+									</div>
+									<div class="media-body">
+										<h4 class="media-heading">Satellite</h4>
+										<div class="btn-group" role="group" aria-label="...">
+											<button type="button" class="btn btn-default addSomething" id="addSatellite"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+											<button type="button" class="btn btn-default addSomething" id="linkSatellite" data-toggle="modal" data-target="#linkModal" data-ng-click="prepareReference('satellite')"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
+										</div>
+									</div>
+								</div> <!--
+								<div class="media">
+									<div class="media-left">
+										<canvas id="bridgeIcon" width="64" height="64">
+										</canvas>        		
+									</div> 
+									<div class="media-body">
+										<h4 class="media-heading">Bridge</h4>
+										<div class="btn-group" role="group" aria-label="...">
+											<button type="button" class="btn btn-default addSomething" id="addBridge"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+											<button type="button" class="btn btn-default addSomething" id="linkBridge" data-toggle="modal" data-target="#linkModal"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
+										</div>
+									</div>
+								</div>
+								<div class="media">
+									<div class="media-left">
+										<canvas id="referenceIcon" width="64" height="64">
+										</canvas>        		
+									</div>
+									<div class="media-body">
+										<h4 class="media-heading">Reference</h4>
+										<div class="btn-group" role="group" aria-label="...">
+											<button type="button" class="btn btn-default addSomething" id="addReference"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+											<button type="button" class="btn btn-default addSomething" id="linkReference" data-toggle="modal" data-target="#linkModal"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
+										</div>
+									</div>
+								</div> -->
+	        				</div>
+	          			</div>
+	        		</div>
+					<div class="col-xs-9 col-sm-9 sidebar-offcanvas" id="sidebar">
+						<div class="panel panel-default">
+							<div class="panel-heading clearfix">
+						    	<div class="panel-title">Canvas
+						        	<div class="btn-group pull-right"  role="group" aria-label="...">
+										<button type="button" class="btn btn-default" data-toggle="modal" data-target="#viewNameModal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+										<button type="button" class="btn btn-default" data-ng-click="removeView()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>
+										<button type="button" class="btn btn-default" data-ng-click="saveView()"><span class="glyphicon glyphicon-save" aria-hidden="true"></span></button>
+									</div>
+						        </div>
+						   </div>
+						   <div class="panel-body">
+						   		<canvas id="vaultCanvas" width="800" height="800">
+						        </canvas>
+						   </div>
+					    </div>
+					</div>
+          		</div>
+        	</div>
+		</div>
+		<div class="modal fade" id="linkModal" tabindex="-1" role="dialog">
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			        <h4 class="modal-title">Add Reference</h4>
+			      </div>
+			      <div class="modal-body">
+			        <div class="list-group">
+	            		<a href="#" data-ng-repeat="e in otherElements" data-ng-click="addReference(e)" class="list-group-item">({(e.element.text)})</a>
+	          		</div>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+		</div>
+		<div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
+			  <div class="modal-dialog modal-lg">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			        <h4 class="modal-title">Element Details</h4>
+			      </div>
+			      <div class="modal-body">
+			        <p id="referenceHint" class="referenceVisible">This element is just a reference.</p>
+			        <form>
+					  <div class="form-group hubVisible linkVisible satelliteVisible">
+					    <label for="elementName">Name</label>
+					    <input type="text" class="form-control" id="elementName" placeholder="Element Name">
+					    <div class="alert alert-danger hidden" role="alert" id = "alertElementName">Text comes here.</div>
+					  </div>
+					  <div class="checkbox lastSeenVisible">
+					  	<label>
+					  		<input type="checkbox" id="addLastSeen"/> add a last seen date field
+					  	</label>
+					  </div>
+					  <div class="form-group linkVisible">
+					    <label for="linkTypeChoice">Link Type</label>
+					    <div class="dropdown" id=linkTypeChoice>
+							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+							   <span id="linkTypeDisplay">Link Type</span>
+							   <span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+							    <li class="linkTypeOption"><a href="#">generic</a></li>
+							    <li class="linkTypeOption"><a href="#">same-as</a></li>
+							    <li class="linkTypeOption"><a href="#">hierarchical</a></li>
+							    <li class="linkTypeOption"><a href="#">nonhistorized</a></li>
+							    <li class="linkTypeOption"><a href="#">nondescriptive</a></li>
+							    <li class="linkTypeOption"><a href="#">computed aggregate</a></li>
+							    <li class="linkTypeOption"><a href="#">exploration</a></li>
+							  </ul>
+						</div>
+					  </div>
+					  <label for="linkTypeChoice" class="satelliteVisible">Satellite Type</label>
+					  <div class="dropdown satelliteVisible">
+						<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+							<span id="satelliteTypeDisplay">Satellite Type</span>
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+							<li class="satelliteTypeOption"><a href="#">overloaded</a></li>
+							<li class="satelliteTypeOption"><a href="#">multi-active</a></li>
+							<li class="satelliteTypeOption"><a href="#">status tracking</a></li>
+							<li class="satelliteTypeOption"><a href="#">effectivity</a></li>
+							<li class="satelliteTypeOption"><a href="#">record tracking</a></li>
+							<li class="satelliteTypeOption"><a href="#">computed</a></li>
+						</ul>
+					  </div>
+					  <label class="hubVisible">Business Key</label>
+					  <label class="satelliteVisible">Additional Fields</label>
+					  <div class="btn-group pull-right hubVisible satelliteVisible" role="group" aria-label="...">
+						<button type="button" class="btn btn-default" data-ng-click="addField()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
+						<button type="button" class="btn btn-default" data-ng-click="removeField()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>		  			
+					  </div>
+					  <div class="form-group hubVisible satelliteVisible">
+						  <p />
+						  <table class="table table-bordered">
+						  	<thead>
+						  		<tr>
+						  			<td>Field Name</td>
+						  			<td>Data Type</td>
+						  			<td>Length/Precision</td>
+						  			<td>Scale</td>
+						  			<td>NOT NULL</td>
+						  		</tr>
+						  	</thead>
+						  	<tbody>  
+						  		<tr  class="fieldEditor" data-ng-repeat="f in elementConfiguration.fields" data-ng-click="selectField(f)">
+									<td><input type="text" size="50" class="form-control fieldNameInput" data-ng-model="f.name"/></td>
+									<td>
+										<select class="form-control" data-ng-init="f.dataType" data-ng-model="f.dataType">
+											<option data-ng-repeat="dt in f.dataTypes" data-ng-click="chooseDatatype(dt)">({(dt.dataType)})</option>
+										</select>
+									</td>
+									<td><input type="text" maxlength="5" size="5" class="form-control" data-ng-if="f.precisionVisible" data-ng-model="f.precision"/></td>
+									<td><input type="text" maxlength="3" size="3" class="form-control" data-ng-if="f.scaleVisible" data-ng-model="f.scale"  /></td>
+									<td><input type="checkbox" data-ng-model="f.notNull"/></td>
+								</tr>
+						  	</tbody>
+						  </table>
+					  </div>
+					  <label class="linkVisible">Generating Hubs</label>
+					  <div class="form-group linkVisible">
+						  <table class="table table-bordered">
+						  	<thead>
+						  		<tr>
+						  			<td>Connected Hubs</td>
+						  			<td>generating</td>
+						  		</tr>
+						  	</thead>
+						  	<tbody id="generatingHubsList">
+						  	</tbody>		  	
+						  </table>
+					  </div>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-danger" data-dismiss="modal" id="deleteElementButton">Delete Element</button>
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			        <button type="button" class="btn btn-default" data-dismiss="modal" id="saveDetailsButton">Save</button>
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+		</div>
+		<div class="modal fade" id="viewNameModal" tabindex="-1" role="dialog" data-ng-app="vault">
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			        <h4 class="modal-title">Create a new view</h4>
+			      </div>
+			      <div class="modal-body">
+			        <form>
+					  <div class="form-group">
+					    <label for="viewName">Name</label>
+					    <input type="text" class="form-control" id="viewName" data-ng-model="viewName" placeholder="View Name" data-ng-blur="checkView()" />
+					  </div>
+					  <div class="alert alert-danger hidden" role="alert" id = "alertViewName">Text comes here.</div>
+					</form>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			        <button type="button" class="btn btn-default" data-dismiss="modal" data-ng-click="addView()" id="saveViewButton">Save</button>
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+		<div class="modal fade" id="connectionNameModal" tabindex="-1" role="dialog">
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			        <h4 class="modal-title">Give the connection a name</h4>
+			      </div>
+			      <div class="modal-body">
+			        <form>
+					  <div class="form-group">
+					    <label for="connectionNameInput">Name</label>
+					    <input type="text" class="form-control" id="connectionNameInput" placeholder="Connection Name" />
+					  </div>
+					</form>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-danger" data-dismiss="modal" id="deleteConnectionButton">Delete Connection</button>
+			        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			        <button type="button" class="btn btn-default" data-dismiss="modal" id="saveConnectionNameButton">Save</button>
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</div>
+</div>
