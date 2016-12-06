@@ -15,27 +15,20 @@
 		paper.setup('satelliteIcon');
 		drawSatelliteIcon(paper, 0, 0, 1);
 	});
-</script> <!--
-<script type="text/javascript">
-	$(document).ready(function(){
-		paper.setup('bridgeIcon');
-		drawBridgeIcon(paper, 0, 0, 1);
-	});
-</script>
+</script> 
 <script type="text/javascript">
 	$(document).ready(function(){
 		paper.setup('referenceIcon');
 		drawReferenceIcon(paper, 0, 0, 1);
 	});
-</script> -->
+</script>
 <script type="text/javascript">
 	$(document).ready(function(){
 		prepareCanvas(paper);
 		$('#addHub').click(function(){addHub(paper);});
 		$('#addLink').click(function(){addLink(paper);});
 		$('#addSatellite').click(function(){addSatellite(paper);});
-		$('#addBridge').click(function(){addElement(paper, 'bridge');});
-		$('#addReference').click(function(){addElement(paper, 'reference');});
+		$('#addReference').click(function(){addElement(paper, 'referenceTable');});
 		$('#saveDetailsButton').click(function(){saveDetails();});
 		$('#deleteElementButton').click(function(){
 			var deleteIt = confirm("Do you really want to remove this element?");
@@ -117,20 +110,7 @@
 											<button type="button" class="btn btn-default addSomething" id="linkSatellite" data-toggle="modal" data-target="#linkModal" data-ng-click="prepareReference('satellite')"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
 										</div>
 									</div>
-								</div> <!--
-								<div class="media">
-									<div class="media-left">
-										<canvas id="bridgeIcon" width="64" height="64">
-										</canvas>        		
-									</div> 
-									<div class="media-body">
-										<h4 class="media-heading">Bridge</h4>
-										<div class="btn-group" role="group" aria-label="...">
-											<button type="button" class="btn btn-default addSomething" id="addBridge"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
-											<button type="button" class="btn btn-default addSomething" id="linkBridge" data-toggle="modal" data-target="#linkModal"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
-										</div>
-									</div>
-								</div>
+								</div> 
 								<div class="media">
 									<div class="media-left">
 										<canvas id="referenceIcon" width="64" height="64">
@@ -143,7 +123,7 @@
 											<button type="button" class="btn btn-default addSomething" id="linkReference" data-toggle="modal" data-target="#linkModal"><span class="glyphicon glyphicon-link" aria-hidden="true"></span></button>
 										</div>
 									</div>
-								</div> -->
+								</div>
 	        				</div>
 	          			</div>
 	        		</div>
@@ -195,7 +175,7 @@
 			      <div class="modal-body">
 			        <p id="referenceHint" class="referenceVisible">This element is just a reference.</p>
 			        <form>
-					  <div class="form-group hubVisible linkVisible satelliteVisible">
+					  <div class="form-group hubVisible linkVisible satelliteVisible referenceTableVisible">
 					    <label for="elementName">Name</label>
 					    <input type="text" class="form-control" id="elementName" placeholder="Element Name">
 					    <div class="alert alert-danger hidden" role="alert" id = "alertElementName">Text comes here.</div>
@@ -223,13 +203,14 @@
 							  </ul>
 						</div>
 					  </div>
-					  <label for="linkTypeChoice" class="satelliteVisible">Satellite Type</label>
+					  <label for="satelliteTypeChoice" class="satelliteVisible">Satellite Type</label>
 					  <div class="dropdown satelliteVisible">
 						<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
 							<span id="satelliteTypeDisplay">Satellite Type</span>
 							<span class="caret"></span>
 						</button>
 						<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+						    <li class="satelliteTypeOption"><a href="#">generic</a></li>
 							<li class="satelliteTypeOption"><a href="#">overloaded</a></li>
 							<li class="satelliteTypeOption"><a href="#">multi-active</a></li>
 							<li class="satelliteTypeOption"><a href="#">status tracking</a></li>
@@ -239,13 +220,12 @@
 						</ul>
 					  </div>
 					  <label class="hubVisible">Business Key</label>
-					  <label class="satelliteVisible">Additional Fields</label>
-					  <div class="btn-group pull-right hubVisible satelliteVisible" role="group" aria-label="...">
+					  <label class="satelliteVisible referenceTableVisible">Additional Fields</label>
+					  <div class="btn-group pull-right hubVisible satelliteVisible referenceTableVisible" role="group" aria-label="...">
 						<button type="button" class="btn btn-default" data-ng-click="addField()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button>
 						<button type="button" class="btn btn-default" data-ng-click="removeField()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span></button>		  			
 					  </div>
-					  <div class="form-group hubVisible satelliteVisible">
-						  <p />
+					  <div class="form-group hubVisible satelliteVisible referenceTableVisible">
 						  <table class="table table-bordered">
 						  	<thead>
 						  		<tr>

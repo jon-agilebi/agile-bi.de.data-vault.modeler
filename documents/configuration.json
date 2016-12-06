@@ -8,17 +8,37 @@
        "hubName": "upper('H_<name>')",
        "linkName": "upper('L_<name>')",
        "satelliteName": "upper('S_<name>')",
+       "referenceName": "upper('R_<name>')",
        "hubHashKey": "upper('<name>_KEY')",
        "linkHashKey": "upper('<name>_KEY')",
        "loadDate": "LOAD_DATE",
+       "loadEndDate": "LOAD_END_DATE",
        "recordSource": "RECORD_SOURCE",
        "hashDiff": "HASH_DIFF",
-       "lastSeen": "LAST_SEEN_DATE"
+       "lastSeen": "LAST_SEEN_DATE",
+       "masterPrefix": "MASTER_",
+       "duplicatePrefix": "DUPLICATE_",
+       "childPrefix": "CHILD_",
+       "parentPrefix": "PARENT_"
    },
    "targetSystems": [
        {
            "id": "oracle",
            "name": "Oracle",
+           "conversion": [
+               {
+                   "dataType": "NUMBER",
+                   "conversion": "to_char(-)"
+               },
+               {
+                   "dataType": "DATE",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               },
+               {
+                   "dataType": "TIMESTAMP",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               }
+           ],
            "dataTypes": [
                "CHAR(n)",
                "NCHAR(n)",
@@ -34,16 +54,51 @@
                "NCLOB",
                "BFILE"
            ],
-           "hubTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} PRIMARY KEY,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each businessKey}} {{name}} {{dataType}} {{#if notNull}}NOT NULL,{{/#if}}{{/#each}}\n{{tableProperties}};\n\nCREATE UNIQUE INDEX {{schema}}.{{tableName}}_UQ ON {{schema}}.{{tableName}} ({{#each businessKey}}{{name}},{{/#each}})\n{{tableProperties}};",
-           "linkTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} NOT NULL,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{#/if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each reference}}{{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}})\n{{tableProperties}};",
-           "satelliteTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {#each reference}}[{{name}} {{dataType}} NOT NULL,{{/#each}}\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},\n{{/#if}} {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each field}}{{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}})\n{{tableProperties}};",
-           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\n-- generic hash function\n\n\nCREATE OR REPLACE FUNCTION VAULT_HASH(IN text {{hashKeyDataType}})\nRETURN {{hashKeyDataType}} IS\nBEGIN\n\tRETURN rawtohex(DBMS_CRYPTO.Hash(UTL_I18N.STRING_TO_RAW(text, '{{encoding}}'), {{hashMethod}}));\nEND;\n\n",
+           "hubTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} PRIMARY KEY,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each businessKey}} {{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}}\n)\n{{tableProperties}};\n\nCREATE UNIQUE INDEX {{schema}}.{{tableName}}_UQ ON {{schema}}.{{tableName}}(\n{{#each businessKey}}{{name}}{{/#each}}\n)\n{{tableProperties}};",
+           "linkTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} NOT NULL,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each reference}} {{name}} {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}})\n{{tableProperties}};",
+           "satelliteTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n{{#each reference}} {{name}} {{dataType}} NOT NULL,{{/#each}}\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n {{loadEndDateName}} {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}} {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each field}} {{name}} {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}}\n)\n{{tableProperties}};",
+           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\n-- generic hash function\n\n\nCREATE OR REPLACE FUNCTION VAULT_HASH(IN text {{hashKeyDataType}})\nRETURN {{hashKeyDataType}} IS\nBEGIN\n\tRETURN rawtohex(DBMS_CRYPTO.Hash(UTL_I18N.STRING_TO_RAW(text, '{{encoding}}'), {{hashFunction}}));\nEND;\n\n",
+           "referenceTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n{{#each field}} {{name}} {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}}\n)\n{{tableProperties}};",
            "footerTemplate": "",
            "functionTemplate": "CREATE OR REPLACE FUNCTION {{schema}}.{{tableName}}({{field}})\nRETURN {{hashKeyDataType}} IS\nBEGIN\n\tRETURN {{term}};\nEND;\n\n"
        },
        {
            "id": "sapHana",
            "name": "SAP Hana",
+           "conversion": [
+               {
+                   "dataType": "Integer",
+                   "conversion": "to_char(-)"
+               },
+               {
+                   "dataType": "Integer64",
+                   "conversion": "to_char(-)"
+               },
+               {
+                   "dataType": "Decimal",
+                   "conversion": "to_char(-)"
+               },
+               {
+                   "dataType": "DecimalFloat",
+                   "conversion": "to_char(-)"
+               },
+               {
+                   "dataType": "LocalDate",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               },
+               {
+                   "dataType": "LocalTime",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               },
+               {
+                   "dataType": "UTCDateTime",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               },
+               {
+                   "dataType": "UTCTimestamp",
+                   "conversion": "to_char(-, 'yyyymmdd')"
+               }
+           ],
            "dataTypes": [
                "String(n)",
                "LargeString",
@@ -62,7 +117,8 @@
            ],
            "hubTemplate": "@Catalog.tableType:#COLUMN\nentity {{tableName}} {\n key {{hashKeyName}}: HashType NOT NULL;\n {{loadDateName}}: LoadDate NOT NULL;\n{{#if addlastSeen}}{{lastSeenName}}: LastSeen;{{/#if}}\n {{recordSourceName}}: RecordSource NOT NULL;\n{{#each businessKey}} {{name}}: {{dataType}}{{#if notNull}} NOT NULL{{/#if}};{{/#each}}\n};",
            "linkTemplate": "@Catalog.tableType:#COLUMN\nentity {{tableName}} {\n key {{hashKeyName}}: HashType NOT NULL;\n{{#each reference}} {{name}}: HashType NOT NULL;{{/#each}}\n {{loadDateName}}: LoadDate NOT NULL;\n{{#if lastSeen}}{{lastSeenName}}: {{lastSeenDataType}};{{/#if}}\n {{recordSourceName}}: RecordSource NOT NULL;\n};",
-           "satelliteTemplate": "@Catalog.index:[{name:'{{tableName}}_IDX', unique:true, order:#ASC,elementNames:[{{#each reference}}'{{name}}'{{/#each}}, '{{loadDateName}}']}]\n@Catalog.tableType:#COLUMN\nentity {{tableName}} {\n{{#each reference}} {{name}}: HashType NOT NULL;{{/#each}}\n {{loadDateName}}: LoadDate NOT NULL;\n{{#if lastSeen}}{{lastSeenName}}: LastSeen;{{/#if}}\n {{recordSourceName}}: RecordSource NOT NULL;\n {{hashDiff}}: HashType;\n{{#each field}} {{name}}: {{dataType}}{{#if notNull}} NOT NULL{{/#if}};{{/#each}}\n};",
+           "satelliteTemplate": "@Catalog.index:[{name:'{{tableName}}_IDX', unique:true, order:#ASC,elementNames:[{{#each reference}}'{{name}}'{{/#each}}, '{{loadDateName}}']}]\n@Catalog.tableType:#COLUMN\nentity {{tableName}} {\n{{#each reference}} {{name}}: HashType NOT NULL;{{/#each}}\n {{loadDateName}}: LoadDate NOT NULL;\n {{loadEndDateName}}: LoadDate NOT NULL;\n{{#if lastSeen}}{{lastSeenName}}: LastSeen;{{/#if}}\n {{recordSourceName}}: RecordSource NOT NULL;\n {{hashDiff}}: HashType;\n{{#each field}} {{name}}: {{dataType}}{{#if notNull}} NOT NULL{{/#if}};{{/#each}}\n};",
+           "referenceTemplate": "@Catalog.tableType:#COLUMN\nentity {{tableName}} {\n{{{#each field}} {{name}}: {{dataType}}{{#if notNull}} NOT NULL{{/#if}};{{/#each}}\n};",
            "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\nnamespace {{namespace}};\n\n@Schema:'{{schema}}'\n\ncontext {{context}} {\n\ntype HashType: {{hashKeyDataType}};\ntype LoadDate: {{loadDateDataType}};\ntype RecordSource: {{recordSourceDataType}};\ntype LastSeen: {{lastSeenDataType}};",
            "footerTemplate": "};",
            "functionTemplate": "FUNCTION \"{{schema}}\".\"{{context}}::{{tableName}}\" ({{field}})\n\tRETURNS  hashKey {{hashKeyReturn}}\n\tLANGUAGE SQLSCRIPT\n\tSQL SECURITY INVOKER AS\nBEGIN\n\thashKey :=  {{term}};\nEND;"
@@ -70,6 +126,48 @@
        {
            "id": "sqlServer",
            "name": "SQL Server",
+           "conversion": [
+               {
+                   "dataType": "int",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "bigint",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "decimal",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "numeric",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "float",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "real",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "date",
+                   "conversion": "convert(varchar, -, 104)"
+               },
+               {
+                   "dataType": "time",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "binary",
+                   "conversion": "convert(varchar, -)"
+               },
+               {
+                   "dataType": "varbinary",
+                   "conversion": "convert(varchar, -)"
+               }
+           ],
            "dataTypes": [
                "char(n)",
                "varchar(n)",
@@ -86,12 +184,13 @@
                "binary(n)",
                "varbinary(n)"
            ],
-           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\n\nUSE [{{database}}]\nGO\n\nSET ANSI_NULLS ON\nGO\n\nSET QUOTED_IDENTIFIER IN\nGO\n\nSET ANSI_PADDING ON\nGO\n\n",
-           "hubTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n [{{hashKeyName}}] [{{hashKeyDataType}}] NOT NULL,\n [{{loadDateName}}] [{{loadDateDataType}}] NOT NULL,\n{{#if lastSeen}}[{{lastSeenName}}] [{{lastSeenDataType}}],{{/#if}}\n [{{recordSourceName}}] [{{recordSourceDataType}}] NOT NULL,\n{{#each businessKey}}[{{name}}] [{{dataType}}] {{#if notNull}}NOT NULL{{/#if}}{{/each})\nCONSTRAINT [PK_{{tableName}}] PRIMARY KEY CLUSTERED\n(\t[{{hashKeyName}}] ASC\n) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, DATA_COMPRESSION = PAGE) ON [{{dataset}}]\n\n",
-           "linkTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n [{{hashKeyName}}] [{{hashKeyDataType}}] NOT NULL,\n [{{loadDateName}}] [{{loadDateDataType}}] NOT NULL,\n{{#if lastSeen}}[{{lastSeenName}}] [{{lastSeenDataType}}],{{/#if}}\n [{{recordSourceName}}] [{{recordSourceDataType}}] NOT NULL,\n{{#each reference}}[{{name}}] [{{dataType}}] {{#if notNull}}NOT NULL{{/#if}}{{/each})\nCONSTRAINT [PK_{{tableName}}] PRIMARY KEY CLUSTERED\n(\t[{{hashKeyName}}] ASC\n) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, DATA_COMPRESSION = PAGE) ON [{{dataset}}]",
-           "satelliteTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n {{#each reference}}[{{name}}] [{{dataType}}] NOT NULL,{{/#each}}\n [{{loadDateName}}] [{{loadDateDataType}}] NOT NULL,\n{{#if lastSeen}}{{[lastSeenName]}} [{{lastSeen}}],\n{{/#if}}] {{[recordSourceName]}} [{{recordSourceType}}] NOT NULL,\n [{{hashDiff}}] [{{hashkeyDataType}}],\n{{#each field}} [{{name}}] [{{dataType}}]{{#if notNull}} NOT NULL,{{/#if}}{{/#each}}\n [{{loadDateName}}] [{{loadDateDataType}}] NOT NULL,\n{{#if lastSeen}}[{{lastSeenName}}] [{{lastSeenDataType}}],{{/#if}}\n [{{recordSourceName}}] [{{recordSourceDataType}}] NOT NULL,\n{{#each reference}}[{{name}}] [{{dataType}}] {{#if notNull}}NOT NULL{{/#if}}{{/each})\nCONSTRAINT [PK_{{tableName}}] PRIMARY KEY CLUSTERED\n(\t[{{hashKeyName}}] ASC, [{{loadDateName}}] ASC \n) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, DATA_COMPRESSION = PAGE) ON [{{dataset}}]",
-           "footerTemplate": "GO\n\nSET ANSI_PADDING OFF\nGO",
-           "functionTemplate": "FUNCTION \"{{schema}}\".\"{{context}}::{{tableName}}\" ({{field}})\n\tRETURNS  hashKey {{hashKeyReturn}}\n\tLANGUAGE SQLSCRIPT\n\tSQL SECURITY INVOKER AS\nBEGIN\n\thashKey :=  {{term}};\nEND;"
+           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\n\nUSE [{{database}}]\nGO\n\nSET ANSI_NULLS ON\nGO\n\nSET QUOTED_IDENTIFIER ON\nGO\n\nSET ANSI_PADDING ON\nGO\n\n-- generic hash function\n\n\nCREATE FUNCTION VAULT_HASH(@text {{hashKeyDataType}})\nRETURNS {{hashKeyDataType}} AS\nBEGIN\n\tRETURN CONVERT({{hashKeyDataType}}, HASHBYTES('{{hashFunction}}',@text));\nEND;\n\n",
+           "hubTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n [{{hashKeyName}}] {{hashKeyDataType}} NOT NULL,\n [{{loadDateName}}] {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}[{{lastSeenName}}] {{lastSeenDataType}},{{/#if}}\n [{{recordSourceName}}] {{recordSourceDataType}} NOT NULL,\n{{#each businessKey}} [{{name}}] {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}}\n CONSTRAINT [PK_{{tableName}}] PRIMARY KEY CLUSTERED\n(\t[{{hashKeyName}}] ASC\n) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, DATA_COMPRESSION = PAGE) ON [{{dataset}}])\n",
+           "linkTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n [{{hashKeyName}}] {{hashKeyDataType}} NOT NULL,\n [{{loadDateName}}] {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}[{{lastSeenName}}] {{lastSeenDataType}},{{/#if}}\n [{{recordSourceName}}] {{recordSourceDataType}} NOT NULL,\n{{#each reference}} [{{name}}] {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}}\n CONSTRAINT [PK_{{tableName}}] PRIMARY KEY CLUSTERED\n(\t[{{hashKeyName}}] ASC\n) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90, DATA_COMPRESSION = PAGE) ON [{{dataset}}])\n",
+           "satelliteTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n {{#each reference}}[{{name}}] {{dataType}} NOT NULL,{{/#each}}\n [{{loadDateName}}] {{loadDateDataType}} NOT NULL,\n [{{loadEndDateName}}] {{loadDateDataType}} NOT NULL,\n{{#if addLastSeen}}{{[lastSeenName]}} {{lastSeenDataType}},{{/#if}}\n [{{recordSourceName}}] {{recordSourceDataType}} NOT NULL,\n [{{hashDiff}}] {{hashKeyDataType}},\n{{#each field}} [{{name}}] {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}})\n CONSTRAINT [PK_{{tableName}}] ON [{{dataset}}])\n",
+           "footerTemplate": "",
+           "functionTemplate": "CREATE FUNCTION [dbo].{{tableName}}({{field}})\nRETURNS {{hashKeyDataType}} AS\nBEGIN\n\tRETURN {{term}};\nEND;\n\n",
+           "referenceTemplate": "CREATE TABLE [dbo].[{{tableName}}] (\n {{#each field}}[{{name}}] {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}});"
        },
        {
            "id": "sql",
@@ -114,10 +213,11 @@
                "TIMESTAMP(n)",
                "INTERVAL"
            ],
-           "hubTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} PRIMARY KEY,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each businessKey}} {{name}} {{dataType}} {{#if notNull}}NOT NULL,{{/#if}}{{/#each}}\n{{tableProperties}};\n\nCREATE UNIQUE INDEX {{schema}}.{{tableName}}_UQ ON {{schema}}.{{tableName}} ({#each businessKey}}{{name}},{{/#each}});",
-           "linkTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} NOT NULL,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{#/if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each reference}}{{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}});",
-           "satelliteTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{#each reference}}[{{name}} {{dataType}} NOT NULL,{{/#each}}\n \n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each field}}{{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}});",
-           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n\n",
+           "hubTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} PRIMARY KEY,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}} {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each businessKey}} {{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}}\n);\n\nCREATE UNIQUE INDEX {{schema}}.{{tableName}}_UQ ON {{schema}}.{{tableName}} (\n{{#each businessKey}}{{name}}{{/#each}}\n);",
+           "linkTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{hashKeyName}} {{hashKeyDataType}} NOT NULL,\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}}\n {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each reference}}{{name}} {{dataType}} {{#if notNull}}NOT NULL{{/#if}}{{/#each}}\n);",
+           "satelliteTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n{{#each reference}} {{name}} {{dataType}} NOT NULL{{/#each}},\n {{loadDateName}} {{loadDateDataType}} NOT NULL,\n {{loadEndDateName}} {{loadDateDataType}} NOT NULL,\n{{#if lastSeen}}{{lastSeenName}} {{lastSeenDataType}},{{/#if}} {{recordSourceName}} {{recordSourceDataType}} NOT NULL,\n{{#each field}} {{name}} {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}}\n);",
+           "referenceTemplate": "CREATE TABLE {{schema}}.{{tableName}} (\n {{#each field}}{{name}} {{dataType}}{{#if notNull}} NOT NULL{{/#if}}{{/#each}}\n);",
+           "headerTemplate": "/**\n* created from the Data Vault Model {{modelName}}\n* on {{generationDate}}\n**/\n",
            "footerTemplate": ""
        }
    ]

@@ -201,7 +201,7 @@ app.use(function(req, res, next){
 app.get('/', function(req, res){
 	db.view('vault', 'by_name',{"user":req.session.userId}, function(err,result){
 		if(err) {
-			console.log(err);
+			logger.log('error', err);
 			res.render('index',{message:err});
 		}
 		else {
@@ -269,7 +269,6 @@ app.get('/user/data', function(req, res){
 					for(var k = 0; k < userData.allUser[j].memberOf.length; k++) {
 						if(userData.allUser[j].memberOf[k].group == groupName) {
 							member.push({user:userData.allUser[j].user, role:userData.allUser[j].memberOf[k].role, icon:glyph(userData.allUser[j].memberOf[k].role)});
-							console.log(userData.allUser[j].memberOf[k].role);
 							break;
 						}
 					}
@@ -361,7 +360,7 @@ app.post('/create/:id', function(req, res){
 	db.getDoc(req.params.id, function(err, model){
 		if(err) res.send({error:err});
 		else {
-			var withRelease = artefactFactory.createRelease(model, req.body);
+			var withRelease = artefactFactory.createRelease(model, req.body, logger);
 			
 			db.saveDoc(req.params.id, withRelease.model, function(err,response){
 				if(err) res.send({error:err}); else return res.send(withRelease.latest);
@@ -450,9 +449,7 @@ app.get('/artefacts/:id/:version', function(req,res){
 			}
 			else {
 				fs.writeFile("/tmp/" + fileName, content, function(err) {
-				    if(err) {
-				        return console.log(err);
-				    }
+				    if(err) logger.log('error', err);
 				    else {
 				    	res.set({
 				    	    "Content-Disposition": "attachment;filename=" + fileName,
@@ -460,8 +457,9 @@ app.get('/artefacts/:id/:version', function(req,res){
 				    	});
 				    	res.sendFile("/tmp/" + fileName);
 				    }
+				    
+				    logger.log('info', 'The file ' + fileName + ' was saved.');
 	
-				    console.log("The file was saved!");
 				});
 			}
 		}
@@ -479,13 +477,13 @@ app.use(function(req, res){
 //custom 500 page
 
 app.use(function(err, req, res, next){
-	console.log(err.stack);
+	logger.log('error', err.stack);
 	res.type('text/plain');
 	res.status(500);
 	res.send('500 - Server Error');
 });
 
 app.listen(app.get('port'), function(){
-	console.log('Express started on port ' + app.get('port'));
-	console.log('Administrator is ' + process.env.advm_admin);
+	logger.log('info', 'Express started on port ' + app.get('port'));
+	logger.log('info', 'Administrator is ' + process.env.advm_admin);
 });

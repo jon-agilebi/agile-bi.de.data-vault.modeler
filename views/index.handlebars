@@ -67,7 +67,7 @@
         </div>
         <div class="jumbotron hidden" id="signinJumbotron">
             <p>Add a new model or edit an existing model!</p>
-            <a class="btn btn-default" id="addModelButton" role="button">Add a new model</a>
+            {{#if advanced}}<a class="btn btn-default" id="addModelButton" role="button">Add a new model</a>{{/if}}
         </div>
         <div class="row hidden" id="modelOverview">
             {{#each models}}

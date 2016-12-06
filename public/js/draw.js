@@ -178,31 +178,6 @@ function drawSatelliteIcon(paper, w, h, s) {
 	return items;
 }
 
-function drawBridgeIcon(paper, w, h, s) {
-	
-	var items = [];
-	
-	with (paper) {
-		
-		var bridge = new Path();
-		bridge.fillColor = 'black';
-		bridge.add(new Point(0 * s + w, 32 * s + h));
-		bridge.add(new Point(10 * s + w, 12 * s + h));
-		bridge.add(new Point(54 * s + w, 12 * s + h));
-		bridge.add(new Point(64 * s + w, 32 * s + h));
-		bridge.add(new Point(44 * s + w, 32 * s + h));
-		bridge.add(new Point(44 * s + w, 22 * s + h));
-		bridge.add(new Point(20 * s + w, 22 * s + h));
-		bridge.add(new Point(20 * s + w, 32 * s + h));
-		bridge.closed = true;
-		
-		items.push(bridge);
-		view.draw();
-	}
-	
-	return items;
-}
-
 function drawReferenceIcon(paper, w, h, s) {
 	
 	var items = [];
@@ -372,7 +347,8 @@ function loadView(aView, id) {
 		
 		if(e.kind == "hub") drawing = drawHub(paper, e.x, e.y, e.text);
 		else if(e.kind == "link") drawing = drawLink(paper, e.x, e.y, e.text);
-		else drawing = drawSatellite(paper, e.x, e.y, e.text);
+		else if(e.kind == "satellite") drawing = drawSatellite(paper, e.x, e.y, e.text);
+		else if(e.kind == "referenceTable") drawReference(paper, e.x, e.y, e.text);
 		
 		if(e.reference) elements.push({elementId:e.elementId, kind:e.kind, x:e.x, y:e.y, text:drawing.textElement, symbol:drawing.symbol, frame:drawing.frame, configuration:e.configuration, reference:e.reference});
 		else elements.push({elementId:e.elementId, kind:e.kind, x:e.x, y:e.y, text:drawing.textElement, symbol:drawing.symbol, frame:drawing.frame, configuration:e.configuration});
@@ -426,11 +402,7 @@ function addElement(paper, kind) {
 	var drawing;
 	
 	if(!place.status) {
-		if(kind == "bridge") {
-			var text = "BRIDGE " + nextId;
-			var drawing = drawBridge(paper, place.x, place.y, text);
-		}
-		else if (kind == "reference") {
+		if (kind == "referenceTable") {
 			var text = "REFERENCE " + nextId;
 			var drawing = drawReference(paper, place.x, place.y, text);	
 		}
@@ -445,25 +417,9 @@ function drawReference(paper, x, y, text) {
 	with(paper) {
 		var rectangle = new Rectangle(x, y, 180, 60);
 		var path = new Path.Rectangle(rectangle);
-		activateElement(path, paper, 'bridge');
+		activateElement(path, paper, 'referenceTable');
 		path.strokeColor = 'black';
 		var symbol = drawReferenceIcon(paper, x + 9, y + 9, 0.66);
-		var textElement = new PointText(path.position); 
-		textElement.content = text;
-		view.draw();
-		
-		return {symbol:symbol, frame:path, textElement:textElement};
-	}
-}
-
-function drawBridge(paper, x, y, text) {
-	with(paper) {
-		var path = new CompoundPath('M8 0, L60 0, L172 0, A8, 8 0 0, 1 180,8L180 52, A8, 8 0 0, 1 172,60, L120 60, L105 45, L75 45, L60 60, L8 60, A8, 8 0 0, 1 0,52,L0 8, A8, 8 0 0, 1 8,0');
-		path.strokeColor = 'black';
-		path.position.x += x;
-		path.position.y += y;
-		activateElement(path, paper, 'link');
-		var symbol = drawBridgeIcon(paper, x + 9, y + 9, 0.66);
 		var textElement = new PointText(path.position); 
 		textElement.content = text;
 		view.draw();
@@ -718,6 +674,7 @@ function showModal(frame) {
 			$('.satelliteVisible').hide();
 			$('.hubVisible').hide();
 			$('.lastSeenVisible').hide();
+			$('.referenceTableVisible').hide();
 			$('.referenceVisible').show();
 			$('#referenceHint').text("This element is just a reference of the element " + e.text.content + " in view " + e.reference.view);
 		}
@@ -730,6 +687,7 @@ function showModal(frame) {
 			if(e.kind == "hub"){
 				$('.linkVisible').hide();
 				$('.satelliteVisible').hide();
+				$('.referenceTableVisible').hide();
 				$('.hubVisible').show();
 				if($scope.actualModel.properties.lastSeenOption == "depends") $('.lastSeenVisible').show(); else $('.lastSeenVisible').hide();
 				
@@ -741,6 +699,7 @@ function showModal(frame) {
 			else if (e.kind == "link"){
 				$('.hubVisible').hide();
 				$('.satelliteVisible').hide();
+				$('.referenceTableVisible').hide();
 				$('.linkVisible').show();
 				if($scope.actualModel.properties.lastSeenOption == "depends") $('.lastSeenVisible').show(); else $('.lastSeenVisible').hide();
 					
@@ -759,16 +718,26 @@ function showModal(frame) {
 					$('#linkTypeDisplay').text(c.linkType);
 				}
 			}
-			else {
+			else if (e.kind == "satellite"){
+				$('.satelliteVisible').show();
 				$('.hubVisible').hide();
 				$('.linkVisible').hide();
-				$('.satelliteVisible').show();
 				$('.lastSeenVisible').hide();
+				$('.satelliteVisible').show();
 				
-				if(c.satelliteType) {
+				if(e.kind == "satellite" && c.satelliteType) {
 					$('#satelliteTypeDisplay').attr('satelliteType', c.satelliteType);
 					$('#satelliteTypeDisplay').text(c.satelliteType);
 				}
+				
+				if(c.fields) $scope.elementConfiguration.fields = prepareFields(c.fields, $scope.actualModel.properties.dataTypes);
+			}
+			else {
+				$('.hubVisible').hide();
+				$('.linkVisible').hide();
+				$('.satelliteVisible').hide();
+				$('.referenceTableVisible').show();
+				$('.lastSeenVisible').hide();
 				
 				if(c.fields) $scope.elementConfiguration.fields = prepareFields(c.fields, $scope.actualModel.properties.dataTypes);
 			}
@@ -789,7 +758,7 @@ function dtPart(dt, kind) {
 			else {
 				var remainder = dt.substr(index);
 				var index2 = remainder.indexOf(",");
-				if(index2 > 0) {
+				if(index2 >= 0) {
 					if(kind == "scale") return remainder.substr(index2 + 1, remainder.length - index2 - 2);
 					else return remainder.substr(1, remainder.length - index2 - 1);
 				}
@@ -978,8 +947,8 @@ function findFrame(point) {
 function getConnectedElements(frame) {
 	var elms = [];
 	for(var i = 0; i < connections.length;i++) {
-		if(connections[i].source == frame) elms.push(getElement(connections[i].target));
-		if(connections[i].target == frame) elms.push(getElement(connections[i].source));
+		if(connections[i].source == frame && getElement(connections[i].target).kind != "referenceTable") elms.push(getElement(connections[i].target));
+		if(connections[i].target == frame && getElement(connections[i].source).kind != "referenceTable") elms.push(getElement(connections[i].source));
 	}
 	
 	return elms;
@@ -1025,9 +994,14 @@ function checkConnection(source, target) {
 			message = "Two satellites cannot be connected!";
 		}
 		
-		if((s.kind == "satellite" && getConnectedElements(source).length > 0) || (t.kind == "satellite" && getConnectedElements(target).length > 0)) {
+		if((s.kind == "referenceTable" && t.kind != "satellite") || (t.kind == "referenceTable" && s.kind != "satellite")) {
 			correct = false;
-			message = "A satellite must have exactly one connection!";
+			message = "A reference table can only be connected to a satellite!";
+		}
+		
+		if((s.kind == "satellite" && getConnectedElements(source).length > 0 && t.kind != "referenceTable") || (t.kind == "satellite" && getConnectedElements(target).length > 0 && s.kind != "referenceTable")) {
+			correct = false;
+			message = "A satellite must have exactly one connection (except reference tables)!";
 		}
 	}
 	
@@ -1043,7 +1017,8 @@ function addReference(reference) {
 		
 		if(reference.element.kind == "hub") drawing = drawHub(paper, place.x, place.y, text);
 		else if(reference.element.kind == "link") drawing = drawLink(paper, place.x, place.y, text);
-		else drawing = drawSatellite(paper, place.x, place.y, text);
+		else if(reference.element.kind == "satellite") drawing = drawSatellite(paper, place.x, place.y, text);
+		else drawReference(paper, place.x, place.y, text);
 		
 		elements.push({elementId:nextId, kind:reference.element.kind, x:place.x, y:place.y, text:drawing.textElement, symbol:drawing.symbol, frame:drawing.frame, reference:{elementId:reference.element.elementId, view:reference.view}});
 		nextId++;
@@ -1061,10 +1036,6 @@ function checkElement(frame) {
 	for(var i = 0; i < elements.length; i++) {
 		if(elements[i] != e && elements[i].text.content == $('#elementName').val() && elements[i].kind == e.kind) messages.push("An element of this kind and with this name already exists.");
 	}
-	
-	console.log(messages[0]);
-	
-	// Datentypen vorhanden
 	
 	if(messages.length > 0) {
 		$('#alertElementName').text(messages.join("; "));

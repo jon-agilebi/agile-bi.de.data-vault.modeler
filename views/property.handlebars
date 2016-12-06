@@ -85,18 +85,34 @@
 			});
 			
 			var dataTypes = [];
-			$('input[name=allowDataType]:checked').parent().parent().children('.dataTypeName').each(function(index){dataTypes.push($(this).text());});
-			console.log(dataTypes);
+			$('input[name=allowDataType]:checked').parent().parent().children('.dataTypeName').each(function(index){
+				if(dataTypes.indexOf($(this).text()) < 0) dataTypes.push($(this).text());
+			});
+			
+			var targetSystem = $('#targetSystemDisplay').attr('system');
+			
+			hanaDataTypes = [];
+			oracleDataTypes = [];
+			sqlServerDataTypes = [];
+			sqlDataTypes = [];
+			
+			if(targetSystem == "sapHana") hanaDataTypes = dataTypes;
+			else if(targetSystem == "oracle") oracleDataTypes = dataTypes;
+			else if(targetSystem == "sqlServer") sqlServerDataTypes = dataTypes;
+			else if(targetSystem == "sql") sqlDataTypes = dataTypes;
+			
 	    	$.post(path, JSON.stringify({"name":$('#modelNameInput').val(),
 	    		"description":$('#modelDescriptionInput').val(),
 	    		"group": $('#groupDisplay').text(),
 	    		"hubName": $('#hubNameInput').val(),
 	    		"linkName": $('#linkNameInput').val(),
 	    		"satelliteName": $('#satelliteNameInput').val(),
+	    		"referenceName": $('#referenceNameInput').val(),
 	    		"usage": $('input[name=optionUsage]:checked').val(),
 	    		"loadDateName": $('#loadDateNameInput').val(),
+	    		"loadEndDateName": $('#loadEndDateNameInput').val(),
 	    		"recordSourceName": $('#recordSourceNameInput').val(),
-	    		"targetSystem":$('#targetSystemDisplay').attr('system'),
+	    		"targetSystem":targetSystem,
 	    		"lastSeenName": $('#lastSeenNameInput').val(),
 	    		"lastSeenOption": $('input[name=optionLastSeen]:checked').val(),
 	    		"hubHashKey":$('#hubHashKeyInput').val(),
@@ -111,6 +127,10 @@
     		    "recordSourceDataTypeScale":$('#recordSourceDataTypeScale').val(),
     		    "lastSeenDataTypePrecision":$('#lastSeenDataTypePrecision').val(),
     		    "lastSeenDataTypeScale":$('#lastSeenDataTypeScale').val(),
+    		    "masterPrefix":$('#sameAsMasterInput').val(),
+    		    "duplicatePrefix":$('#sameAsDuplicateInput').val(),
+    		    "childPrefix":$('#hierarchyChildInput').val(),
+    		    "parentPrefix":$('#hierarchyParentInput').val(),
     		    "businessKeyTemplate":$('#businessHashKeyTemplateInput').val(),
     		    "linkKeyTemplate":$('#linkHashKeyTemplateInput').val(),
     		    "hashDiffTemplate":$('#hashDiffTemplateInput').val(),
@@ -118,11 +138,11 @@
     		    "recordSourceDataType":$('#recordSourceDataTypeDisplay').text(),
     		    "lastSeenDataType":$('#lastSeenDataTypeDisplay').text(),
     		    "hana": {"namespace": $('#hanaNamespace').val(), "schema": $('#hanaSchema').val(), "context": $('#hanaContext').val(),
-    		             "xs": $('input[name=optionHanaXS]:checked').val(), "dataTypes":dataTypes},
+    		             "xs": $('input[name=optionHanaXS]:checked').val(), "dataTypes":hanaDataTypes},
     		    "oracle": {"schema": $('#oracleSchema').val(), "tablespace": $('#oracleTablespace').val(), "encoding": $('#oracleEncoding').val(), 
-    		               "version": $('input[name=optionOracleVersion]:checked').val(), "tableProperties": $('#oracleTableProperties').val(), "dataTypes":dataTypes},
-    		    "sqlServer": {"database": $('#sqlServerDatabase').val(), "dataset": $('#sqlServerDataset').val(), "dataTypes":dataTypes},
-    		    "sql": {"schema": $('#ansiSchema').val(), "dataTypes":dataTypes}
+    		               "version": $('input[name=optionOracleVersion]:checked').val(), "tableProperties": $('#oracleTableProperties').val(), "dataTypes":oracleDataTypes},
+    		    "sqlServer": {"database": $('#sqlServerDatabase').val(), "dataset": $('#sqlServerDataset').val(), "dataTypes":sqlServerDataTypes},
+    		    "sql": {"schema": $('#ansiSchema').val(), "dataTypes":sqlDataTypes}
     		               
     		})).done(function(){
     			window.location.href = "/";
@@ -376,6 +396,10 @@
 						    <input type="input" class="form-control" id="satelliteNameInput" placeholder="Satellite Name Pattern" {{#if p.satelliteName}}value={{p.satelliteName}}{{else}}value={{c.namingConventions.satelliteName}}{{/if}}>
 						</div> 
 						<div class="form-group">
+						    <label for="referenceNameInput">Reference Table Naming Convention</label>
+						    <input type="input" class="form-control" id="referenceNameInput" placeholder="Reference Table Name Pattern" {{#if p.referenceName}}value={{p.referenceName}}{{else}}value={{c.namingConventions.referenceName}}{{/if}}>
+						</div> 
+						<div class="form-group">
 						    <label for="hubHashKeyInput">Hub Hashkey Naming Convention</label>
 						    <input type="input" class="form-control" id="hubHashKeyInput" placeholder="Hub Hashkey Naming Convention" {{#if p.hubHashKey}}value={{p.hubHashKey}}{{else}}value={{c.namingConventions.hubHashKey}}{{/if}}>
 						</div>
@@ -388,7 +412,11 @@
 						    <input type="input" class="form-control" id="loadDateNameInput" placeholder="Load Date Name" {{#if p.loadDateName}}value={{p.loadDateName}}{{else}}value={{c.namingConventions.loadDate}}{{/if}}>
 						</div>
 						<div class="form-group">
-							<label for="dropdownLoadDateDataType">Load Date Data Type</label>
+						    <label for="loadDateNameInput">Load End Date Name</label>
+						    <input type="input" class="form-control" id="loadEndDateNameInput" placeholder="Load End Date Name" {{#if p.loadEndDateName}}value={{p.loadEndDateName}}{{else}}value={{c.namingConventions.loadEndDate}}{{/if}}>
+						</div>
+						<div class="form-group">
+							<label for="dropdownLoadDateDataType">Load (End) Date Data Type</label>
 							<div class="row">
 								<div class="col-xs-3 col-sm-3 col-lg-3">
 									<div class="dropdown">
@@ -484,7 +512,23 @@
 								<div class="col-xs-3 col-sm-3 col-lg-3"> 
 								</div> 
 							</div> 
-						</div>  <!-- form-group -->     
+						</div>  <!-- form-group -->   
+						<div class="form-group">
+						    <label for="sameAsMasterInput">Master Prefix in Same As Link</label>
+						    <input type="input" class="form-control" id="sameAsMasterInput" placeholder="Master Prefix" {{#if p.masterPrefix}}value={{p.masterPrefix}}{{else}}value={{c.namingConventions.masterPrefix}}{{/if}}>
+						</div>
+						<div class="form-group">
+						    <label for="sameAsDuplicateInput">Duplicate Prefix in Same As Link</label>
+						    <input type="input" class="form-control" id="sameAsDuplicateInput" placeholder="Duplicate Prefix" {{#if p.duplicatePrefix}}value={{p.duplicatePrefix}}{{else}}value={{c.namingConventions.duplicatePrefix}}{{/if}}>
+						</div>
+						<div class="form-group">
+						    <label for="hierarchyParentInput">Parent Prefix in Hierarchy Link</label>
+						    <input type="input" class="form-control" id="hierarchyParentInput" placeholder="Parent Prefix" {{#if p.parentPrefix}}value={{p.parentPrefix}}{{else}}value={{c.namingConventions.parentPrefix}}{{/if}}>
+						</div>
+						<div class="form-group">
+						    <label for="hierarchyChildInput">Child Prefix in Same As Link</label>
+						    <input type="input" class="form-control" id="hierarchyChildInput" placeholder="Child Prefix" {{#if p.childPrefix}}value={{p.childPrefix}}{{else}}value={{c.namingConventions.childPrefix}}{{/if}}>
+						</div>
 					</div>  <!-- panel-body -->
 		        </div>  <!-- panel-default -->
 		    </div> <!-- row -->
