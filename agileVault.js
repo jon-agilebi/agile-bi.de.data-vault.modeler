@@ -199,7 +199,7 @@ app.use(function(req, res, next){
 });
 
 app.get('/', function(req, res){
-	db.view('vault', 'by_name',{"user":req.session.userId}, function(err,result){
+	db.view(dbName, 'by_name',{"user":req.session.userId}, function(err,result){
 		if(err) {
 			logger.log('error', err);
 			res.render('index',{message:err});
