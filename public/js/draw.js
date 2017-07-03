@@ -375,7 +375,9 @@ function saveElements() {
 	var serialized = [];
 	
 	for(var i = 0; i < elements.length; i++) {
-		if(elements[i].reference) serialized.push({elementId:elements[i].elementId, x:elements[i].frame.position.x - 90, y:elements[i].frame.position.y - 30, kind:elements[i].kind, text:elements[i].text.content, configuration:elements[i].configuration, reference:elements[i].reference });
+		if(elements[i].reference) {
+			if(getConnectedElements(elements[i].frame) > 0) serialized.push({elementId:elements[i].elementId, x:elements[i].frame.position.x - 90, y:elements[i].frame.position.y - 30, kind:elements[i].kind, text:elements[i].text.content, configuration:elements[i].configuration, reference:elements[i].reference });
+		}
 		else serialized.push({elementId:elements[i].elementId, x:elements[i].frame.position.x - 90, y:elements[i].frame.position.y - 30, kind:elements[i].kind, text:elements[i].text.content, configuration:elements[i].configuration});
 	}
 	
